@@ -1,7 +1,7 @@
 use bollard::{
     container::{
-        Config, CreateContainerOptions, RemoveContainerOptions, StartContainerOptions,
-        WaitContainerOptions,
+        AttachContainerOptions, Config, CreateContainerOptions, RemoveContainerOptions,
+        StartContainerOptions, WaitContainerOptions,
     },
     errors::Error,
     secret::ContainerCreateResponse,
@@ -21,7 +21,6 @@ pub async fn run_container(
 
     let config = Config {
         image: Some(image_name),
-        cmd: Some(vec!["sleep", "10"]),
         ..Default::default()
     };
 
@@ -30,6 +29,8 @@ pub async fn run_container(
     client
         .start_container(container_name, None::<StartContainerOptions<String>>)
         .await?;
+
+    read_output(client, container_name).await?;
 
     let options = Some(WaitContainerOptions {
         condition: "not-running",
@@ -43,4 +44,23 @@ pub async fn run_container(
         .remove_container(container_name, None::<RemoveContainerOptions>)
         .await?;
     return Ok(created_container);
+}
+
+pub async fn read_output(client: &Docker, container_name: &str) -> Result<(), Error> {
+    let attach_options = Some(AttachContainerOptions::<String> {
+        stdout: Some(true),
+        logs: Some(true),
+        stream: Some(true),
+        ..Default::default()
+    });
+
+    let mut attached_container = client
+        .attach_container(container_name, attach_options)
+        .await?;
+
+    while let Some(log) = attached_container.output.next().await {
+        println!("-> {:?}", log?);
+    }
+
+    return Ok(());
 }
