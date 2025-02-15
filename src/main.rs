@@ -1,5 +1,6 @@
 mod docker_api;
-use docker_api::client::{get_docker_client, list_images, pull_image, run_container};
+use docker_api::client::{get_docker_client, list_images, pull_image};
+use docker_api::container::run_container;
 
 #[tokio::main]
 async fn main() {
