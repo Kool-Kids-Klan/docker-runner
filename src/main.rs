@@ -12,7 +12,7 @@ async fn main() {
         println!("-> {:?}", image);
     }
 
-    let image_name = "ubuntu";
+    let image_name = "test-image";
     let pull_logs = pull_image(&docker_client, image_name, "latest")
         .await
         .unwrap();
